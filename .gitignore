@@ -1,22 +1,22 @@
-# --- Private study data ---
-data/**/*.csv
-data/**/*.tsv
-data/**/*.xlsx
-data/**/*.xls
-data/**/*.sav
-data/**/*.rds
-data/**/*.parquet
-data/**/*.feather
-data/**/*.json
-data/**/*.zip
+# --- Private study data (inputs + derived analysis-ready datasets) ---
+# Scripts read/write under Data/ (capital D) and may also use data/ on some machines.
+Data/**
+data/**
 
-# Keep folder placeholders if needed
+# Keep folder placeholders only
+!Data/
+!Data/**/
+!data/
+!data/**/
+!Data/.gitkeep
+!Data/**/.gitkeep
 !data/.gitkeep
 !data/**/.gitkeep
 
 # --- Generated analysis outputs ---
-results/
-Results/
+# Scripts write run-stamped outputs under Results/Study*/run_*.
+Results/**
+results/**
 outputs/
 Outputs/
 reports/generated/
@@ -25,6 +25,16 @@ temp/
 cache/
 caches/
 logs/
+
+# Keep result folder placeholders only
+!Results/
+!Results/**/
+!results/
+!results/**/
+!Results/.gitkeep
+!Results/**/.gitkeep
+!results/.gitkeep
+!results/**/.gitkeep
 
 # Common generated files
 *.log

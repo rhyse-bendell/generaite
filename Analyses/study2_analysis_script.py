@@ -350,7 +350,7 @@ def build_default_config() -> Study2Config:
 
     Adjust input_csv if your Study 2 file has a different name.
     """
-    project_root = Path(r"C:\Post-doc Work\Gener-ai-te")
+    project_root = Path(__file__).resolve().parents[1]
     data_dir = project_root / "Data"
     input_csv = data_dir / "Generaite_Study2_1-21-2026.csv"
 
