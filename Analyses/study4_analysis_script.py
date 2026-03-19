@@ -278,7 +278,7 @@ def build_config_for_dataset(
     input_filename: CSV filename under the Data directory.
     stamp: timestamp string shared across both configs for this run.
     """
-    project_root = Path(r"C:\Post-doc Work\Gener-ai-te")
+    project_root = Path(__file__).resolve().parents[1]
     data_dir = project_root / "Data"
     input_csv = data_dir / input_filename
 

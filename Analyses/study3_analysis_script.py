@@ -349,7 +349,7 @@ def build_default_config_study3() -> Study3Config:
 
     NOTE: Update input_csv below if your Study 3 file has a different name.
     """
-    project_root = Path(r"C:\Post-doc Work\Gener-ai-te")
+    project_root = Path(__file__).resolve().parents[1]
     data_dir = project_root / "Data"
     # Update this filename if needed
     input_csv = data_dir / "Generaite_Study3_1-21-2026.csv"
