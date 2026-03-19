@@ -1,0 +1,54 @@
+# --- Private study data ---
+data/**/*.csv
+data/**/*.tsv
+data/**/*.xlsx
+data/**/*.xls
+data/**/*.sav
+data/**/*.rds
+data/**/*.parquet
+data/**/*.feather
+data/**/*.json
+data/**/*.zip
+
+# Keep folder placeholders if needed
+!data/.gitkeep
+!data/**/.gitkeep
+
+# --- Generated analysis outputs ---
+results/
+Results/
+outputs/
+Outputs/
+reports/generated/
+tmp/
+temp/
+cache/
+caches/
+logs/
+
+# Common generated files
+*.log
+*.tmp
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+
+# --- Local env / secrets ---
+.env
+.env.*
+*.local
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
