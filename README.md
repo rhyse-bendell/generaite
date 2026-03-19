@@ -101,3 +101,34 @@ This repo is intended to store **documents and analysis code**. If data are incl
 ## Contact / attribution
 
 This repository is part of a UCF research effort (2023). If you reuse or adapt any materials or code, please provide appropriate attribution consistent with academic norms and any licensing or sharing constraints specified in this repository.
+
+---
+
+## Local desktop analysis launcher (Windows + Tkinter)
+
+A local GUI launcher is included for running the existing scripts in `Analyses/` without rewriting their statistical logic:
+
+- Double-click: `launch_generaite_gui.bat`
+- Python GUI: `gui/analysis_launcher.py`
+- Inspection helpers:
+  - `gui/script_metadata.py` (loads script-aware defaults/formulas/expected fields)
+  - `gui/inspection.py` (inspects selected CSV columns and compatibility)
+
+### Usage
+
+1. From a normal clone on Windows, ensure Python is installed (or use a local `.venv`).
+2. Install required script dependencies used by the analyses (e.g., `pandas`, `numpy`, `scipy`, `statsmodels`, `matplotlib`, `patsy`).
+3. Double-click `launch_generaite_gui.bat` from repo root.
+4. In each Study tab:
+   - review the script path, default input path, and output pattern
+   - browse/select a CSV (or click **Use default input**)
+   - click **Inspect file** to compare detected columns against expected required/optional fields and composite components
+   - click **Run analysis** to execute the underlying study script and view stdout/stderr trace in the tab log
+
+### Study 4 mode
+
+The Study 4 tab includes a dataset mode selector:
+- `Study1_Study3` runs the combined Studies 1+3 workflow
+- `Study1_Study2` runs the combined Studies 1+2 workflow
+
+Outputs are created under `Results/` according to each script's existing run-folder logic.
