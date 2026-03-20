@@ -1,24 +1,47 @@
 from __future__ import annotations
 
 import io
+import sys
 import threading
 import traceback
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from tkinter import END, LEFT, RIGHT, BOTH, X, filedialog, messagebox, StringVar, Tk
 from tkinter import ttk
+from typing import Any, Callable, Dict
 
-try:
-    from .inspection import inspect_csv
-    from .script_metadata import StudyMetadata, load_study_metadata
-except ImportError:
-    from inspection import inspect_csv
-    from script_metadata import StudyMetadata, load_study_metadata
+
+def _show_startup_error(title: str, details: str):
+    print(f"{title}: {details}", file=sys.stderr)
+    try:
+        root = Tk()
+        root.withdraw()
+        messagebox.showerror(title, details)
+        root.destroy()
+    except Exception:
+        pass
+
+
+def _load_gui_dependencies() -> tuple[Callable[..., str], Callable[[], Dict[str, Any]]]:
+    try:
+        from .inspection import inspect_csv
+        from .script_metadata import load_study_metadata
+        return inspect_csv, load_study_metadata
+    except ImportError:
+        if __package__ in (None, ""):
+            repo_root = Path(__file__).resolve().parents[1]
+            if str(repo_root) not in sys.path:
+                sys.path.insert(0, str(repo_root))
+            from gui.inspection import inspect_csv
+            from gui.script_metadata import load_study_metadata
+            return inspect_csv, load_study_metadata
+        raise
 
 
 class StudyTab:
-    def __init__(self, parent, metadata: StudyMetadata):
+    def __init__(self, parent, metadata: Any, inspect_csv_func: Callable[..., str]):
         self.metadata = metadata
+        self.inspect_csv_func = inspect_csv_func
         self.frame = ttk.Frame(parent)
         self.selected_input = StringVar(value=str(metadata.default_input))
         self.dataset_mode = StringVar(value=(metadata.dataset_modes[0] if metadata.dataset_modes else ""))
@@ -77,7 +100,7 @@ class StudyTab:
         self.log_box = self._text_widget(log_frame, height=24)
 
     def _text_widget(self, parent, height=14):
-        text = ttk.Treeview  # placeholder to satisfy lint in minimal env
+        text = ttk.Treeview
         del text
         import tkinter as tk
 
@@ -109,7 +132,7 @@ class StudyTab:
         self.clear_log()
         path = Path(self.selected_input.get()).expanduser().resolve()
         try:
-            report = inspect_csv(path, self.metadata, self.dataset_mode.get() or None)
+            report = self.inspect_csv_func(path, self.metadata, self.dataset_mode.get() or None)
             self.append_log(report)
         except Exception:
             self.append_log(traceback.format_exc())
@@ -155,7 +178,7 @@ class StudyTab:
 
 
 class AnalysisLauncherApp:
-    def __init__(self, root: Tk):
+    def __init__(self, root: Tk, inspect_csv_func: Callable[..., str], load_study_metadata_func: Callable[[], Dict[str, Any]]):
         self.root = root
         self.root.title("Gener-AI-te Analysis Launcher")
         self.root.geometry("1280x860")
@@ -163,16 +186,34 @@ class AnalysisLauncherApp:
         notebook = ttk.Notebook(root)
         notebook.pack(fill=BOTH, expand=True)
 
-        for key, meta in load_study_metadata().items():
-            tab = StudyTab(notebook, meta)
+        for _, meta in load_study_metadata_func().items():
+            tab = StudyTab(notebook, meta, inspect_csv_func)
             notebook.add(tab.frame, text=meta.display_name)
 
 
 def main():
+    try:
+        inspect_csv_func, load_study_metadata_func = _load_gui_dependencies()
+    except ModuleNotFoundError as exc:
+        missing = exc.name or "a required dependency"
+        _show_startup_error(
+            "Missing Python dependency",
+            (
+                f"Gener-AI-te could not start because '{missing}' is not installed.\n\n"
+                "Run setup_generaite_env.bat from the repository root, then try again.\n"
+                "Preferred launch command: python -m gui.analysis_launcher"
+            ),
+        )
+        return 1
+    except Exception as exc:
+        _show_startup_error("Launcher startup failed", f"Unexpected startup error:\n{exc}")
+        return 1
+
     root = Tk()
-    AnalysisLauncherApp(root)
+    AnalysisLauncherApp(root, inspect_csv_func, load_study_metadata_func)
     root.mainloop()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -104,26 +104,59 @@ This repository is part of a UCF research effort (2023). If you reuse or adapt a
 
 ---
 
-## Local desktop analysis launcher (Windows + Tkinter)
+## Local setup and launch (Windows + Tkinter)
 
-A local GUI launcher is included for running the existing scripts in `Analyses/` without rewriting their statistical logic:
+A local GUI launcher is included for running the existing scripts in `Analyses/` without changing their statistical logic.
 
-- Double-click: `launch_generaite_gui.bat`
-- Python GUI: `gui/analysis_launcher.py`
-- Inspection helpers:
-  - `gui/script_metadata.py` (loads script-aware defaults/formulas/expected fields)
-  - `gui/inspection.py` (inspects selected CSV columns and compatibility)
+### First-time setup
 
-### Usage
+1. Open this repository locally (normal clone).
+2. Double-click `setup_generaite_env.bat` in the repo root.
+   - Creates a repo-local virtual environment at `.venv` (if missing)
+   - Upgrades `pip`
+   - Installs packages listed in `requirements.txt`
 
-1. From a normal clone on Windows, ensure Python is installed (or use a local `.venv`).
-2. Install required script dependencies used by the analyses (e.g., `pandas`, `numpy`, `scipy`, `statsmodels`, `matplotlib`, `patsy`).
-3. Double-click `launch_generaite_gui.bat` from repo root.
-4. In each Study tab:
-   - review the script path, default input path, and output pattern
-   - browse/select a CSV (or click **Use default input**)
-   - click **Inspect file** to compare detected columns against expected required/optional fields and composite components
-   - click **Run analysis** to execute the underlying study script and view stdout/stderr trace in the tab log
+### Double-click launcher behavior
+
+- Double-click `launch_generaite_gui.bat`.
+- The launcher automatically:
+  1. runs environment bootstrap (`setup_generaite_env.bat --no-pause`)
+  2. uses `.venv\Scripts\python.exe`
+  3. launches the GUI as a module: `python -m gui.analysis_launcher`
+
+Launching as a module preserves package-relative imports in `gui/` and avoids the direct-script import error.
+
+### Manual setup / update commands
+
+From repo root in Command Prompt:
+
+```bat
+setup_generaite_env.bat
+```
+
+Or manually:
+
+```bat
+py -3 -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -r requirements.txt
+```
+
+### Manual module launch command
+
+```bat
+.venv\Scripts\python -m gui.analysis_launcher
+```
+
+If dependencies are missing or broken, the launcher now shows a readable startup message that tells you to run `setup_generaite_env.bat`.
+
+### Study tabs
+
+In each Study tab:
+- review the script path, default input path, and output pattern
+- browse/select a CSV (or click **Use default input**)
+- click **Inspect file** to compare detected columns against expected required/optional fields and composite components
+- click **Run analysis** to execute the underlying study script and view stdout/stderr trace in the tab log
 
 ### Study 4 mode
 
