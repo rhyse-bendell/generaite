@@ -188,6 +188,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from patsy import dmatrix
+from Analyses.outcome_visualizations import create_outcome_boxplots
 
 
 # ============================================================
@@ -1674,6 +1675,13 @@ def run_study4_combined_1_3(cfg: Study4Config) -> None:
     analysis_ready_path = cfg.output_dir / analysis_ready_name
     save_df(df, analysis_ready_path)
     save_df(df, cfg.data_dir / analysis_ready_name)
+    create_outcome_boxplots(
+        df=df,
+        outcomes=cfg.outcomes,
+        output_dir=cfg.output_dir,
+        study_label="study4",
+        grouping_cols=[cfg.presented_attribution_col, cfg.label_accuracy_col],
+    )
 
     # Cell counts for PresentedAttribution × ActualOrigin
     cell_counts = (
@@ -1942,6 +1950,13 @@ def run_study4_combined_1_2(cfg: Study4Config) -> None:
     analysis_ready_path = cfg.output_dir / analysis_ready_name
     save_df(df, analysis_ready_path)
     save_df(df, cfg.data_dir / analysis_ready_name)
+    create_outcome_boxplots(
+        df=df,
+        outcomes=cfg.outcomes,
+        output_dir=cfg.output_dir,
+        study_label="study4",
+        grouping_cols=[cfg.presented_attribution_col, cfg.label_accuracy_col],
+    )
 
     # Restrict to labelled trials (PresentedAttribution != NoLabel)
     pa_series = df[cfg.presented_attribution_col].astype("string")

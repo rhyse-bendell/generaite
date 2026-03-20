@@ -256,6 +256,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from patsy import dmatrix
+from Analyses.outcome_visualizations import create_outcome_boxplots
 
 
 # ============================================================
@@ -1866,6 +1867,13 @@ def run_study1(cfg: Study1Config) -> None:
     save_df(df, analysis_ready_path)
     # Also store a copy in the Data directory for downstream scripts
     save_df(df, cfg.data_dir / "Generaite_Study1_analysis_ready.csv")
+    create_outcome_boxplots(
+        df=df,
+        outcomes=cfg.outcomes,
+        output_dir=cfg.output_dir,
+        study_label="study1",
+        grouping_cols=[cfg.presented_attribution_col],
+    )
 
     # --------------------------------------------------------
     # Cell counts for PresentedAttribution × ActualOrigin

@@ -6,9 +6,10 @@ import threading
 import traceback
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+import tkinter as tk
 from tkinter import END, LEFT, RIGHT, BOTH, X, filedialog, messagebox, StringVar, Tk
 from tkinter import ttk
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
 
 def _show_startup_error(title: str, details: str):
@@ -45,6 +46,7 @@ class StudyTab:
         self.frame = ttk.Frame(parent)
         self.selected_input = StringVar(value=str(metadata.default_input))
         self.dataset_mode = StringVar(value=(metadata.dataset_modes[0] if metadata.dataset_modes else ""))
+        self._viz_images: List[tk.PhotoImage] = []
 
         self._build_ui()
 
@@ -99,11 +101,23 @@ class StudyTab:
         log_frame.pack(fill=BOTH, expand=True, padx=6, pady=4)
         self.log_box = self._text_widget(log_frame, height=24)
 
+        viz_frame = ttk.LabelFrame(self.frame, text="Visualizations")
+        viz_frame.pack(fill=BOTH, expand=True, padx=6, pady=4)
+        self.viz_canvas = tk.Canvas(viz_frame, highlightthickness=0)
+        viz_scroll = ttk.Scrollbar(viz_frame, orient="vertical", command=self.viz_canvas.yview)
+        self.viz_canvas.configure(yscrollcommand=viz_scroll.set)
+        self.viz_canvas.pack(side=LEFT, fill=BOTH, expand=True)
+        viz_scroll.pack(side=RIGHT, fill="y")
+
+        self.viz_content = ttk.Frame(self.viz_canvas)
+        self.viz_window = self.viz_canvas.create_window((0, 0), window=self.viz_content, anchor="nw")
+        self.viz_content.bind("<Configure>", self._on_viz_configure)
+        self.viz_canvas.bind("<Configure>", self._on_canvas_configure)
+        self._render_visualizations([])
+
     def _text_widget(self, parent, height=14):
         text = ttk.Treeview
         del text
-        import tkinter as tk
-
         wrapper = ttk.Frame(parent)
         wrapper.pack(fill=BOTH, expand=True)
         t = tk.Text(wrapper, wrap="word", height=height)
@@ -119,6 +133,35 @@ class StudyTab:
 
     def clear_log(self):
         self.log_box.delete("1.0", END)
+
+    def _on_viz_configure(self, _event=None):
+        self.viz_canvas.configure(scrollregion=self.viz_canvas.bbox("all"))
+
+    def _on_canvas_configure(self, event):
+        self.viz_canvas.itemconfigure(self.viz_window, width=event.width)
+
+    def _render_visualizations(self, image_paths: List[Path]):
+        for child in self.viz_content.winfo_children():
+            child.destroy()
+        self._viz_images = []
+
+        if not image_paths:
+            ttk.Label(
+                self.viz_content,
+                text="Run a study successfully to generate and preview outcome visualizations here.",
+            ).pack(anchor="w", padx=8, pady=8)
+            self._on_viz_configure()
+            return
+
+        for img_path in image_paths:
+            ttk.Label(self.viz_content, text=img_path.name).pack(anchor="w", padx=8, pady=(8, 2))
+            try:
+                image = tk.PhotoImage(file=str(img_path))
+                self._viz_images.append(image)
+                ttk.Label(self.viz_content, image=image).pack(anchor="w", padx=8, pady=(0, 12))
+            except Exception as exc:
+                ttk.Label(self.viz_content, text=f"Unable to load image: {exc}").pack(anchor="w", padx=8, pady=(0, 12))
+        self._on_viz_configure()
 
     def on_browse(self):
         selected = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv"), ("All Files", "*.*")])
@@ -143,6 +186,7 @@ class StudyTab:
             messagebox.showerror("Missing file", f"Input file does not exist:\n{path}")
             return
 
+        self._render_visualizations([])
         self.append_log(f"Running {self.metadata.display_name} using {path} ...")
 
         def _worker():
@@ -175,6 +219,25 @@ class StudyTab:
         if log_text.strip():
             self.append_log("Console output:")
             self.append_log(log_text)
+
+        viz_paths: List[Path] = []
+        if success and output_dir and output_dir.exists():
+            manifest_path = output_dir / "visualization_manifest.csv"
+            if manifest_path.exists():
+                try:
+                    import pandas as pd
+
+                    mdf = pd.read_csv(manifest_path)
+                    for _, row in mdf.iterrows():
+                        p = Path(row.get("path", "")).expanduser()
+                        if p.exists():
+                            viz_paths.append(p)
+                except Exception as exc:
+                    self.append_log(f"Visualization manifest could not be read: {exc}")
+            if not viz_paths:
+                viz_paths = sorted(output_dir.glob("*_boxplot_by_*.png"))
+
+        self._render_visualizations(viz_paths)
 
 
 class AnalysisLauncherApp:
