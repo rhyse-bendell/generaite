@@ -184,6 +184,8 @@ from scipy import stats
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from patsy import dmatrix
 
